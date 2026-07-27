@@ -1,0 +1,26 @@
+# 작업 산출물 / 캐시 (올릴 필요 없음)
+work/
+__pycache__/
+*.pyc
+*.pyo
+
+# 개인 저장 데이터 (각자 로컬에서 생성됨)
+presets.json
+
+# 미디어 · 자막 산출물
+*.mp4
+*.mov
+*.mkv
+*.wav
+*.m4a
+*.webm
+*.srt
+*.vtt
+*.json3
+*.part
+
+# 가상환경 / OS
+.venv/
+venv/
+env/
+.DS_Store

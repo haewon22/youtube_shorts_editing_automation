@@ -1,0 +1,709 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>숏츠 편집 스튜디오</title>
+<style>
+  :root{
+    --bg:#f5f6fa; --card:#ffffff; --text:#1a1c23; --muted:#7a7f8c;
+    --border:#e7e9f0; --accent:#6d5efc; --accent-soft:#efeeff;
+    --ok:#1db386; --danger:#e5484d; --radius:16px;
+    --shadow:0 1px 2px rgba(20,20,50,.04),0 8px 24px rgba(20,20,50,.06);
+  }
+  @media (prefers-color-scheme:dark){
+    :root{ --bg:#0f1117; --card:#181b23; --text:#e8eaf0; --muted:#8b90a0;
+      --border:#262a36; --accent:#8b7dff; --accent-soft:#20223a;
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35); }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+    line-height:1.5;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:720px;margin:0 auto;padding:28px 18px 80px}
+  a{color:inherit}
+
+  header{display:flex;align-items:center;gap:14px;margin-bottom:22px;flex-wrap:wrap}
+  header .logo{width:42px;height:42px;border-radius:12px;flex:none;
+    background:linear-gradient(135deg,var(--accent),#b39bff);
+    display:grid;place-items:center;font-size:22px}
+  header h1{font-size:20px;margin:0;letter-spacing:-.3px}
+  header p{margin:2px 0 0;color:var(--muted);font-size:13px}
+  header .spacer{flex:1}
+
+  .card{background:var(--card);border:1px solid var(--border);
+    border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;margin-bottom:16px}
+  .card.dim{opacity:.55;pointer-events:none}
+  .step-head{display:flex;align-items:center;gap:11px;margin-bottom:16px}
+  .badge{width:26px;height:26px;border-radius:50%;flex:none;display:grid;place-items:center;
+    font-size:13px;font-weight:700;background:var(--accent-soft);color:var(--accent)}
+  .step-head h2{font-size:15px;margin:0;font-weight:650}
+  .step-head .pill{margin-left:auto;font-size:12px;color:var(--muted)}
+  .pill.done{color:var(--ok);font-weight:600}
+
+  label.fld{display:block;font-size:12.5px;color:var(--muted);margin:0 0 5px}
+  input[type=text]{width:100%;padding:11px 13px;border:1px solid var(--border);
+    border-radius:11px;background:var(--bg);color:var(--text);font-size:13.5px;outline:none}
+  input[type=text]:focus{border-color:var(--accent)}
+  .row{display:flex;gap:10px;flex-wrap:wrap}
+  .preset{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px;
+    padding-bottom:14px;border-bottom:1px solid var(--border)}
+  .preset select{flex:1;min-width:140px}
+  .preset input{width:130px;padding:8px 10px;border:1px solid var(--border);
+    border-radius:9px;background:var(--bg);color:var(--text);font-size:13px}
+
+  .btn{appearance:none;border:0;border-radius:11px;padding:11px 17px;font-size:13.5px;
+    font-weight:600;cursor:pointer;background:var(--accent);color:#fff;
+    display:inline-flex;align-items:center;gap:8px;transition:.15s;white-space:nowrap}
+  .btn:hover{filter:brightness(1.05)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .btn.ghost{background:transparent;color:var(--text);border:1px solid var(--border)}
+  .btn.ok{background:var(--ok)}
+  .btn.big{padding:12px 20px}
+  .btn.sm{padding:7px 12px;font-size:12.5px;border-radius:9px}
+  .spin{width:14px;height:14px;border:2px solid rgba(255,255,255,.45);
+    border-top-color:#fff;border-radius:50%;animation:s .7s linear infinite}
+  .btn.ghost .spin{border-color:var(--border);border-top-color:var(--accent)}
+  @keyframes s{to{transform:rotate(360deg)}}
+
+  .settings{display:grid;grid-template-columns:1fr 1fr;gap:16px 22px}
+  @media(max-width:560px){.settings{grid-template-columns:1fr}}
+  .ctl .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+  .ctl .top b{font-size:13px;font-weight:600}
+  .ctl .top span{font-size:13px;color:var(--accent);font-weight:700;font-variant-numeric:tabular-nums}
+  input[type=range]{width:100%;accent-color:var(--accent);height:22px}
+  .chips{display:flex;gap:6px;margin-top:7px;flex-wrap:wrap}
+  .chip{font-size:11.5px;padding:4px 9px;border-radius:20px;border:1px solid var(--border);
+    background:var(--bg);color:var(--muted);cursor:pointer}
+  .chip.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:600}
+  .switch{display:flex;align-items:center;gap:8px;font-size:13px}
+  .switch input{width:18px;height:18px;accent-color:var(--accent)}
+  select{padding:7px 10px;border:1px solid var(--border);border-radius:9px;
+    background:var(--bg);color:var(--text);font-size:12.5px}
+
+  video{width:100%;border-radius:12px;margin-top:14px;background:#000;display:block}
+  .result{display:flex;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap}
+  .tag{font-size:12.5px;background:var(--accent-soft);color:var(--accent);
+    padding:5px 11px;border-radius:20px;font-weight:600}
+
+  .sil-head{font-size:12.5px;color:var(--muted);margin:14px 0 8px}
+  .sil-head b{color:var(--text)}
+  .sil-list{display:flex;flex-direction:column;gap:6px;max-height:220px;overflow:auto;
+    border:1px solid var(--border);border-radius:11px;padding:8px}
+  .sil{display:flex;align-items:center;gap:10px;padding:7px 9px;border-radius:8px;font-size:13px}
+  .sil:hover{background:var(--bg)}
+  .sil input{width:16px;height:16px;accent-color:var(--accent)}
+  .sil .t{font-variant-numeric:tabular-nums}
+  .sil .d{margin-left:auto;color:var(--muted);font-size:12px}
+  .sil .x{border:0;background:transparent;color:var(--muted);font-size:17px;
+    cursor:pointer;padding:0 2px;line-height:1}
+  .sil .x:hover{color:var(--danger)}
+  .mtag{font-size:10px;background:var(--accent-soft);color:var(--accent);
+    padding:2px 7px;border-radius:20px;font-weight:700}
+  .empty{font-size:12.5px;color:var(--muted);padding:10px;text-align:center}
+  .manual{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:14px;
+    background:var(--bg);border:1px solid var(--border);border-radius:11px;padding:10px 12px}
+  .manual .mlabel{font-size:12.5px;color:var(--muted);font-weight:600}
+  .manual input[type=number]{width:82px;padding:7px 9px;border:1px solid var(--border);
+    border-radius:8px;background:var(--card);color:var(--text);font-size:13px;accent-color:var(--accent)}
+
+  .tltime{margin-left:auto;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .cliprow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:10px;font-size:12.5px;color:var(--muted)}
+  .cliprow .ttl{font-weight:600;color:var(--text)}
+  .cliprow .btn.sm{padding:4px 9px;min-width:28px;justify-content:center}
+  .tl{position:relative;height:92px;margin-top:12px;border:1px solid var(--border);
+    border-radius:12px;overflow:hidden;background:var(--bg);cursor:crosshair;
+    user-select:none;touch-action:none}
+  .tl .wave{position:absolute;inset:0;width:100%;height:100%;opacity:.75;pointer-events:none}
+  .tl .ph{position:absolute;top:0;bottom:0;left:0;width:2px;background:var(--text);
+    box-shadow:0 0 0 1px rgba(180,180,200,.35);pointer-events:none;z-index:4}
+  .tl .blk{position:absolute;top:0;bottom:0;background:rgba(229,72,77,.32);
+    border-left:2px solid var(--danger);border-right:2px solid var(--danger);cursor:pointer}
+  .tl .blk.off{background:rgba(150,150,160,.14);border-color:rgba(150,150,160,.55);border-style:dashed}
+  .tl .blk .x{position:absolute;top:3px;right:3px;width:17px;height:17px;border:0;
+    border-radius:50%;background:var(--danger);color:#fff;font-size:11px;line-height:17px;
+    text-align:center;cursor:pointer;display:none;padding:0}
+  .tl .blk:hover .x{display:block}
+  .tl .blk.off .x{background:#8a8f9c}
+  .tl .sel{position:absolute;top:0;bottom:0;background:rgba(109,94,252,.28);
+    border-left:2px solid var(--accent);border-right:2px solid var(--accent);pointer-events:none;z-index:3}
+  .tl .selbar{position:absolute;top:6px;transform:translateX(-50%);display:flex;gap:6px;z-index:5}
+  .tl .trim{position:absolute;top:0;bottom:0;z-index:2;pointer-events:none;
+    background:var(--card);opacity:.62}          /* 여유분: 은은하게 반투명 처리 */
+  .tl .handle{position:absolute;top:0;bottom:0;width:16px;margin-left:-8px;z-index:6;
+    cursor:ew-resize;display:flex;align-items:center;justify-content:center;touch-action:none}
+  .tl .handle::before{content:'';width:3px;height:70%;border-radius:3px;background:var(--accent);
+    box-shadow:0 0 0 1.5px rgba(255,255,255,.5),0 1px 3px rgba(0,0,0,.3)}
+  .tl .handle::after{content:'';position:absolute;top:-1px;bottom:-1px;width:2px;
+    background:var(--accent);opacity:.5}
+  .player{position:relative;margin-top:14px}
+  .player video{width:100%;border-radius:12px;background:#000;display:block;margin:0}
+  .capbar{position:absolute;left:0;right:0;bottom:7%;text-align:center;pointer-events:none;padding:0 8%}
+  .capbar span{display:inline-block;background:rgba(0,0,0,.66);color:#fff;
+    padding:4px 12px;border-radius:7px;font-size:16px;line-height:1.45;
+    max-width:100%;word-break:keep-all}
+  .cuelist{display:flex;flex-direction:column;gap:5px;margin-top:8px;
+    max-height:300px;overflow:auto}
+  .cue{display:flex;align-items:center;gap:7px;padding:6px 8px;border:1px solid var(--border);
+    border-radius:9px;background:var(--card)}
+  .cue.active{border-color:var(--accent);background:var(--accent-soft)}
+  .cue.dropped{opacity:.4}
+  .cue.dropped .cx{text-decoration:line-through}
+  .cue .play{border:0;background:transparent;color:var(--accent);cursor:pointer;font-size:13px;padding:2px 4px}
+  .cue .ct{width:60px;padding:5px 6px;border:1px solid var(--border);border-radius:7px;
+    background:var(--bg);color:var(--text);font-size:12px;font-variant-numeric:tabular-nums;text-align:center}
+  .cue .cx{flex:1;padding:6px 9px;border:1px solid var(--border);border-radius:7px;
+    background:var(--bg);color:var(--text);font-size:13.5px}
+  .cue .cx:focus{border-color:var(--accent);outline:none}
+  .cue .del{border:0;background:transparent;color:var(--muted);font-size:16px;cursor:pointer;padding:0 3px}
+  .cue .del:hover{color:var(--danger)}
+  .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);
+    background:var(--danger);color:#fff;padding:11px 18px;border-radius:12px;font-size:13px;
+    box-shadow:var(--shadow);opacity:0;transition:.25s;pointer-events:none;max-width:90%}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .hint{font-size:12px;color:var(--muted);margin-top:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="logo">🎬</div>
+    <div>
+      <h1>숏츠 편집 스튜디오</h1>
+      <p>URL만 넣으면 완성</p>
+    </div>
+    <div class="spacer"></div>
+    <button class="btn ghost" onclick="resetAll()" title="작업 초기화">↺ 초기화</button>
+    <button class="btn big" id="oneshotBtn" onclick="oneshot()">⚡ 한 번에</button>
+  </header>
+
+  <!-- ① 소재 추출 -->
+  <div class="card" id="s1">
+    <div class="step-head"><div class="badge">1</div><h2>소재 추출 · 컷</h2>
+      <span class="pill" id="p1">숏츠+원본 URL</span></div>
+    <div class="preset">
+      <select id="presetSel" onchange="applyPreset()"><option value="">저장된 세트 불러오기…</option></select>
+      <button class="btn ghost sm" onclick="delPreset()">삭제</button>
+      <input type="text" id="presetName" placeholder="세트 별명">
+      <button class="btn sm" onclick="savePreset()">＋ 저장</button>
+    </div>
+    <label class="fld">숏츠 URL</label>
+    <input type="text" id="shorts" placeholder="https://youtube.com/shorts/...">
+    <label class="fld" style="margin-top:11px">원본 URL (또는 로컬 경로)</label>
+    <input type="text" id="original" placeholder="https://youtube.com/live/...">
+    <div class="row" style="margin-top:14px">
+      <button class="btn" id="extractBtn" onclick="extract()">타임스탬프 추출 &amp; 컷</button>
+    </div>
+    <div id="r1" style="display:none">
+      <div class="result">
+        <span class="tag" id="range1"></span>
+        <button class="btn ghost sm" onclick="dl('cut.mp4')">⬇ 이 컷 다운로드</button>
+      </div>
+      <video id="v1" controls playsinline></video>
+    </div>
+  </div>
+
+  <!-- 편집 설정 -->
+  <div class="card">
+    <div class="step-head"><div class="badge">⚙</div><h2>편집 설정</h2>
+      <span class="pill">편집 · 한 번에 에 공통 적용</span></div>
+    <div class="settings">
+      <div class="ctl">
+        <div class="top"><b>배속</b><span id="speedV">1.10x</span></div>
+        <input type="range" id="speed" min="0.5" max="2" step="0.05" value="1.10">
+        <div class="chips" data-for="speed">
+          <span class="chip">1.0</span><span class="chip on">1.1</span>
+          <span class="chip">1.25</span><span class="chip">1.5</span></div>
+      </div>
+      <div class="ctl">
+        <div class="top"><b>피치</b><span id="pitchV">1.00</span></div>
+        <input type="range" id="pitch" min="0.7" max="1.1" step="0.01" value="1.00">
+        <div class="chips" data-for="pitch">
+          <span class="chip on">1.0</span><span class="chip">0.95</span>
+          <span class="chip">0.91</span><span class="chip">0.85</span></div>
+      </div>
+      <div class="ctl">
+        <div class="top"><b>공백 threshold</b><span id="pauseV">0.50s</span></div>
+        <input type="range" id="pause" min="0.1" max="1.5" step="0.05" value="0.50">
+        <div class="hint">이 길이 넘는 무음을 '긴 공백'으로 감지</div>
+      </div>
+      <div class="ctl">
+        <div class="top"><b>무음 민감도</b><span id="dbV">-30 dB</span></div>
+        <input type="range" id="db" min="-50" max="-15" step="1" value="-30">
+        <div class="hint">배경음 있으면 -35~-25로 조절</div>
+      </div>
+      <div class="ctl">
+        <div class="top"><b>말 여백(패딩)</b><span id="padV">0.15s</span></div>
+        <input type="range" id="pad" min="0" max="0.5" step="0.05" value="0.15">
+      </div>
+      <div class="ctl">
+        <div class="top"><b>자막</b></div>
+        <label class="switch"><input type="checkbox" id="subs" checked> 자막 자동 인식 (영상엔 안 굽고 아래에서 확인·수정)</label>
+        <div class="chips" style="margin-top:9px">
+          <span style="font-size:12px;color:var(--muted)">인식 정확도</span>
+          <select id="subModel">
+            <option value="tiny">빠름(tiny)</option>
+            <option value="base">보통(base)</option>
+            <option value="small">정확(small)</option>
+            <option value="medium">더정확(medium)</option>
+            <option value="large-v3-turbo">한국어추천(turbo)</option>
+            <option value="large-v3" selected>최상(large-v3·느림)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <label class="switch" style="margin-top:14px">
+      <input type="checkbox" id="forceWhisper"> 앞부분 매칭 약할 때 Whisper 재인식 (느림)</label>
+  </div>
+
+  <!-- ② 편집: 컷 · 자막 (통합) -->
+  <div class="card dim" id="s2">
+    <div class="step-head"><div class="badge">2</div><h2>편집 · 컷 · 자막</h2>
+      <span class="pill" id="p2">타임라인 컷 + 자막 수정을 한 화면에서</span></div>
+    <div class="row">
+      <button class="btn ghost" id="silBtn" onclick="detectSilence()">공백 자동 감지</button>
+      <button class="btn ghost" id="subBtn" onclick="transcribeSubs()">자막 자동 인식</button>
+      <button class="btn ghost" id="undoBtn" onclick="undo()" disabled>↩ 되돌리기</button>
+      <span class="tltime" id="tlTime">0:00 / 0:00</span>
+    </div>
+
+    <div class="player">
+      <video id="vedit" controls playsinline></video>
+      <div class="capbar" id="capBar"></div>
+    </div>
+    <div class="tl" id="tl"><img class="wave" id="wave" alt=""><div class="ph" id="ph"></div></div>
+    <div class="cliprow">
+      <span class="ttl">클립 범위</span>
+      <span>시작</span>
+      <button class="btn ghost sm" onclick="nudgeClip('start',-0.5)" title="앞으로 늘리기">◀</button>
+      <button class="btn ghost sm" onclick="nudgeClip('start',0.5)" title="뒤로 줄이기">▶</button>
+      <span>끝</span>
+      <button class="btn ghost sm" onclick="nudgeClip('end',-0.5)" title="앞으로 줄이기">◀</button>
+      <button class="btn ghost sm" onclick="nudgeClip('end',0.5)" title="뒤로 늘리기">▶</button>
+      <span class="hint" style="margin:0">앞뒤 여유 5초까지 늘리기 (타임라인 <b>보라 핸들</b> 드래그도 가능)</span>
+    </div>
+    <div class="hint">타임라인 <b>드래그</b>=구간 자르기 · 빨간블록 <b>클릭</b>=끄기/켜기 · <b>×</b>=삭제 ·
+      짧게클릭=재생위치 · 재생하면 잘린 곳은 <b>자동으로 건너뜀</b></div>
+    <div class="sil-head" id="silHead" style="margin-top:10px"></div>
+
+    <div id="subEditor" style="margin-top:8px">
+      <div class="sil-head">자막 <span id="cueCount">—</span>
+        <span id="subBusy" style="color:var(--muted)"></span>
+        · 텍스트 수정 · <b>▶</b>=재생 · <b>×</b>=삭제 · 컷하면 자막도 같이 따라감</div>
+      <div class="cuelist" id="cueList"></div>
+      <button class="btn ghost sm" style="margin-top:8px" onclick="addCue()">＋ 자막 추가</button>
+    </div>
+
+    <div class="result" style="margin-top:18px">
+      <button class="btn ok" id="exportVideoBtn" onclick="exportVideo()">⬇ 최종 영상 만들기</button>
+      <button class="btn" id="exportSrtBtn" onclick="exportSRT()">⬇ 자막 (.srt)</button>
+    </div>
+    <div class="hint">최종 영상은 자막 없이 렌더돼요. 프리미어: <b>파일›가져오기</b>로 .srt를 넣으면
+      그 영상 타임라인에 캡션이 딱 맞게 붙습니다.</div>
+
+    <div id="r3" style="display:none;margin-top:12px">
+      <div class="result"><span class="tag" id="range3"></span>
+        <a class="btn ok sm" id="dlFinal" download>⬇ 렌더된 영상 저장</a></div>
+      <video id="v3" controls playsinline></video>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+let JOB = null, CUTDUR = 0, SILENCES = [];
+
+// ── 슬라이더 라이브값 & 칩 ──
+const fmtMap = {speed:v=>(+v).toFixed(2)+'x', pitch:v=>(+v).toFixed(2),
+  pause:v=>(+v).toFixed(2)+'s', db:v=>v+' dB', pad:v=>(+v).toFixed(2)+'s'};
+['speed','pitch','pause','db','pad'].forEach(id=>{
+  const el=$('#'+id), out=$('#'+id+'V');
+  const upd=()=>{ if(out) out.textContent=fmtMap[id](el.value);
+    document.querySelectorAll(`.chips[data-for=${id}] .chip`).forEach(c=>
+      c.classList.toggle('on', parseFloat(c.textContent)===parseFloat(el.value))); };
+  el.addEventListener('input',upd); upd();
+});
+document.querySelectorAll('.chips[data-for]').forEach(box=>{
+  const id=box.dataset.for;
+  box.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{
+    $('#'+id).value=parseFloat(c.textContent);
+    $('#'+id).dispatchEvent(new Event('input')); });
+});
+
+function settings(){return{
+  speed:parseFloat($('#speed').value), pitch:parseFloat($('#pitch').value),
+  pause_threshold:parseFloat($('#pause').value), silence_db:parseFloat($('#db').value),
+  keep_pad:parseFloat($('#pad').value), subs:$('#subs').checked,
+  whisper_model:$('#subModel').value, force_whisper:$('#forceWhisper').checked };}
+
+const mmss=s=>{s=Math.max(0,Math.round(s));return (s/60|0)+':'+String(s%60).padStart(2,'0');};
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),4000);}
+function busy(btn,on,label){ btn.disabled=on;
+  if(on){btn._html=btn.innerHTML;btn.innerHTML=`<span class="spin"></span>${label||'처리 중…'}`;}
+  else if(btn._html){btn.innerHTML=btn._html;} }
+async function post(url,body){
+  const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(body)});
+  const j=await r.json().catch(()=>({error:'서버 응답 오류'}));
+  if(!r.ok||j.error) throw new Error(j.error||('오류 '+r.status));
+  return j;
+}
+function setVideo(id,url){const v=$('#'+id);v.src=url+'?v='+Date.now();v.load();}
+function dl(name){ if(JOB) window.location='/download/'+JOB+'/'+name; }
+function enable(sel){$(sel).classList.remove('dim');}
+
+// ── 공통 상태 ──
+let CUES=[];                 // 자막 (cut.mp4 타임라인)
+let CLIP={start:0,end:0};    // 클립 범위 (cut.mp4 안, 앞뒤 여유분 밖은 잘림)
+let HISTORY=[];              // {SILENCES, CUES, CLIP} 스냅샷 (통합 undo)
+const speedVal=()=>parseFloat($('#speed').value)||1;
+const tl=$('#tl'), vedit=$('#vedit'), ph=$('#ph');
+
+function pushHistory(){
+  HISTORY.push(JSON.stringify({s:SILENCES, c:CUES, cl:CLIP}));
+  if(HISTORY.length>80)HISTORY.shift(); $('#undoBtn').disabled=false;
+}
+function undo(){ if(!HISTORY.length)return;
+  const x=JSON.parse(HISTORY.pop()); SILENCES=x.s; CUES=x.c; CLIP=x.cl||CLIP;
+  $('#undoBtn').disabled=!HISTORY.length; renderAll(); }
+function renderAll(){ renderTimeline(); renderCues(); }
+
+// ── 자동 저장 / 복원 (새로고침·재시작해도 이어서 작업) ──
+const LS='shortsStudio';
+let _saveT;
+function touch(){ clearTimeout(_saveT); _saveT=setTimeout(saveState,400); }
+function saveState(){
+  if(!JOB){ try{localStorage.removeItem(LS);}catch(e){} return; }
+  const s={ job:JOB, cutdur:CUTDUR, clip:CLIP, silences:SILENCES, cues:CUES,
+    shorts:$('#shorts').value, original:$('#original').value,
+    set:{speed:$('#speed').value,pitch:$('#pitch').value,pause:$('#pause').value,
+      db:$('#db').value,pad:$('#pad').value,subs:$('#subs').checked,model:$('#subModel').value} };
+  try{ localStorage.setItem(LS, JSON.stringify(s)); }catch(e){}
+}
+async function restoreState(){
+  let s; try{ s=JSON.parse(localStorage.getItem(LS)||'null'); }catch(e){ s=null; }
+  if(s&&s.shorts!==undefined){ $('#shorts').value=s.shorts||''; $('#original').value=s.original||''; }
+  if(s&&s.set){ const S=s.set;
+    $('#speed').value=S.speed; $('#pitch').value=S.pitch; $('#pause').value=S.pause;
+    $('#db').value=S.db; $('#pad').value=S.pad; $('#subs').checked=S.subs; $('#subModel').value=S.model;
+    ['speed','pitch','pause','db','pad'].forEach(id=>$('#'+id).dispatchEvent(new Event('input'))); }
+  if(!s||!s.job) return;
+  let info; try{ const r=await fetch('/api/job/'+s.job); info=r.ok?await r.json():null; }catch(e){ info=null; }
+  if(!info||info.error){ return; }   // 서버에서 만료 → URL/설정만 복원하고 작업은 새로
+  JOB=s.job; CUTDUR=s.cutdur||info.cut_dur; CLIP=s.clip||{start:0,end:CUTDUR};
+  SILENCES=s.silences||[]; CUES=s.cues||[]; HISTORY=[]; $('#undoBtn').disabled=true;
+  $('#range1').textContent=`원본 ${info.start} ~ ${info.end}  ·  ${(CLIP.end-CLIP.start).toFixed(1)}초 (복원됨)`;
+  setVideo('v1',info.media); $('#r1').style.display='block';
+  setVideo('vedit',info.media); vedit.playbackRate=speedVal();
+  $('#wave').src=info.wave+'?v='+Date.now();
+  $('#p1').textContent='복원됨'; $('#p1').className='pill done';
+  enable('#s2'); renderAll();
+  toast('이전 작업을 복원했어요');
+}
+function resetAll(){
+  if(!confirm('작업을 초기화할까요? 저장된 편집(컷·자막)이 사라집니다.'))return;
+  try{ localStorage.removeItem(LS); }catch(e){}
+  location.reload();
+}
+
+// ── 링크 세트(프리셋) 저장/불러오기 ──
+let PRESETS={};
+async function loadPresets(){
+  try{ PRESETS=await (await fetch('/api/presets')).json(); }catch(e){ PRESETS={}; }
+  const sel=$('#presetSel'), cur=sel.value;
+  sel.innerHTML='<option value="">저장된 세트 불러오기…</option>'+
+    Object.keys(PRESETS).map(n=>`<option>${n.replace(/</g,'&lt;')}</option>`).join('');
+  if(PRESETS[cur]) sel.value=cur;
+}
+function applyPreset(){
+  const n=$('#presetSel').value; if(!n||!PRESETS[n])return;
+  $('#shorts').value=PRESETS[n].shorts||''; $('#original').value=PRESETS[n].original||'';
+  $('#presetName').value=n;
+}
+async function savePreset(){
+  const name=$('#presetName').value.trim();
+  if(!name){toast('세트 별명을 입력하세요');return;}
+  const shorts=$('#shorts').value.trim(), original=$('#original').value.trim();
+  if(!shorts&&!original){toast('URL을 먼저 입력하세요');return;}
+  try{ PRESETS=await post('/api/presets',{name,shorts,original});
+    await loadPresets(); $('#presetSel').value=name; toast('저장됨: '+name);
+  }catch(e){toast(e.message);}
+}
+async function delPreset(){
+  const n=$('#presetSel').value; if(!n){toast('삭제할 세트를 고르세요');return;}
+  try{ PRESETS=await post('/api/presets/delete',{name:n});
+    await loadPresets(); $('#presetName').value=''; toast('삭제됨: '+n);
+  }catch(e){toast(e.message);}
+}
+loadPresets();
+restoreState();
+
+// ── ① 추출 ──
+async function extract(){
+  const shorts=$('#shorts').value.trim(), original=$('#original').value.trim();
+  if(!shorts||!original){toast('숏츠와 원본 URL을 모두 입력하세요');return;}
+  const b=$('#extractBtn'); busy(b,true,'추출 중…');
+  try{
+    const j=await post('/api/extract',{shorts,original,
+      force_whisper:$('#forceWhisper').checked});
+    JOB=j.job; CUTDUR=j.cut_dur; SILENCES=[]; CUES=[]; HISTORY=[];
+    CLIP={start:j.clip_start||0, end:(j.clip_end||CUTDUR)};
+    $('#undoBtn').disabled=true; $('#r3').style.display='none';
+    $('#range1').textContent=`원본 ${j.start} ~ ${j.end}  ·  ${(CLIP.end-CLIP.start).toFixed(1)}초`;
+    setVideo('v1',j.media); $('#r1').style.display='block';
+    setVideo('vedit',j.media);
+    vedit.playbackRate=speedVal();
+    if(j.wave) $('#wave').src=j.wave+'?v='+Date.now();
+    renderAll();
+    $('#p1').textContent='완료'; $('#p1').className='pill done';
+    enable('#s2');
+    if($('#subs').checked) transcribeSubs();          // 자막 1회 인식(백그라운드)
+  }catch(e){toast(e.message);} finally{busy(b,false);}
+}
+
+// ── 자막 자동 인식 (cut.mp4 기준, 언제든 다시 가능) ──
+async function transcribeSubs(){
+  if(!JOB){toast('①을 먼저 하세요');return;}
+  const b=$('#subBtn'); busy(b,true,'인식 중…'); $('#subBusy').textContent='· 인식 중…';
+  try{
+    const j=await post('/api/transcribe',{job:JOB,whisper_model:$('#subModel').value});
+    if(CUES.length) pushHistory();
+    CUES=(j.cues||[]).map(c=>({...c})); renderCues();
+    toast(`자막 ${CUES.length}개 인식 완료`);
+  }catch(e){ toast('자막 인식 실패: '+e.message); }
+  finally{ busy(b,false); $('#subBusy').textContent=''; }
+}
+
+// ── 공백 자동 감지 ──
+async function detectSilence(){
+  if(!JOB){toast('①을 먼저 하세요');return;}
+  const b=$('#silBtn'); busy(b,true,'감지 중…');
+  try{
+    const s=settings();
+    const j=await post('/api/silence',{job:JOB,pause_threshold:s.pause_threshold,
+      silence_db:s.silence_db,keep_pad:s.keep_pad});
+    pushHistory();
+    const manual=SILENCES.filter(r=>r.manual);
+    SILENCES=j.silences.map(r=>({...r,on:true})).concat(manual).sort((a,b)=>a.start-b.start);
+    renderAll();
+  }catch(e){toast(e.message);} finally{busy(b,false);}
+}
+
+// ── 타임라인 컷 (드래그 선택) ──
+let sel=null, selbar=null, dragging=false, dStart=0, dEnd=0;
+const fracAt=e=>{const r=tl.getBoundingClientRect();
+  return Math.min(1,Math.max(0,(e.clientX-r.left)/r.width));};
+tl.addEventListener('pointerdown',e=>{
+  if(e.target.closest('.blk,.selbar,.handle,.trim'))return;
+  clearSel(); dragging=true; dStart=dEnd=fracAt(e);
+  tl.setPointerCapture(e.pointerId); drawSel();
+});
+tl.addEventListener('pointermove',e=>{ if(dragging){dEnd=fracAt(e); drawSel();} });
+tl.addEventListener('pointerup',e=>{
+  if(!dragging)return; dragging=false;
+  const a=Math.min(dStart,dEnd), b=Math.max(dStart,dEnd);
+  if((b-a)*CUTDUR<0.2){ clearSel(); if(CUTDUR) vedit.currentTime=a*CUTDUR; return; }
+  showSelbar(a,b);
+});
+function drawSel(){ if(!sel){sel=document.createElement('div');sel.className='sel';tl.appendChild(sel);}
+  const a=Math.min(dStart,dEnd),b=Math.max(dStart,dEnd);
+  sel.style.left=(a*100)+'%'; sel.style.width=((b-a)*100)+'%'; }
+function clearSel(){ if(sel){sel.remove();sel=null;} if(selbar){selbar.remove();selbar=null;} }
+function showSelbar(a,b){
+  if(selbar)selbar.remove();
+  selbar=document.createElement('div'); selbar.className='selbar';
+  selbar.style.left=((a+b)/2*100)+'%';
+  selbar.innerHTML=`<button class="btn sm">✂ 자르기</button><button class="btn ghost sm">취소</button>`;
+  selbar.children[0].onclick=()=>{ addRange(a*CUTDUR,b*CUTDUR); clearSel(); };
+  selbar.children[1].onclick=clearSel;
+  tl.appendChild(selbar);
+}
+function addRange(s,e){
+  pushHistory();
+  SILENCES.push({start:+s.toFixed(2),end:+e.toFixed(2),dur:+(e-s).toFixed(2),on:true,manual:true});
+  SILENCES.sort((a,b)=>a.start-b.start); renderAll();
+}
+function renderTimeline(){
+  if(!tl||!CUTDUR)return;
+  SILENCES.forEach(r=>{if(r.on===undefined)r.on=true;});
+  tl.querySelectorAll('.blk,.trim,.handle').forEach(x=>x.remove());
+  const pct=t=>(t/CUTDUR*100)+'%';
+
+  // 클립 밖(앞뒤 여유분) = 잘림 오버레이 + 드래그 핸들
+  if(CLIP.start>0.01){ const h=document.createElement('div'); h.className='trim';
+    h.style.left='0'; h.style.width=pct(CLIP.start); tl.appendChild(h); }
+  if(CLIP.end<CUTDUR-0.01){ const t2=document.createElement('div'); t2.className='trim';
+    t2.style.left=pct(CLIP.end); t2.style.right='0'; tl.appendChild(t2); }
+  ['start','end'].forEach(which=>{
+    const hd=document.createElement('div'); hd.className='handle';
+    hd.style.left=pct(CLIP[which]); hd.title='클립 '+(which==='start'?'시작':'끝');
+    hd.onpointerdown=ev=>startHandleDrag(which,ev); tl.appendChild(hd);
+  });
+
+  // 내부 컷(공백/직접)
+  SILENCES.forEach((r,i)=>{
+    const b=document.createElement('div'); b.className='blk'+(r.on?'':' off');
+    b.style.left=pct(r.start); b.style.width=pct(r.dur);
+    b.title=`${mmss(r.start)}~${mmss(r.end)} (${r.dur.toFixed(1)}s)`+(r.manual?' · 직접':'');
+    b.innerHTML=`<button class="x" title="삭제">×</button>`;
+    b.onclick=ev=>{ if(ev.target.classList.contains('x'))return;
+      SILENCES[i].on=!SILENCES[i].on; renderAll(); };
+    b.querySelector('.x').onclick=ev=>{ ev.stopPropagation();
+      pushHistory(); SILENCES.splice(i,1); renderAll(); };
+    tl.appendChild(b);
+  });
+  updHead();
+}
+function nudgeClip(which, d){
+  if(!JOB)return; pushHistory();
+  if(which==='start') CLIP.start=Math.min(Math.max(0,CLIP.start+d), CLIP.end-0.3);
+  else CLIP.end=Math.max(Math.min(CUTDUR,CLIP.end+d), CLIP.start+0.3);
+  renderTimeline(); renderCues();
+}
+function startHandleDrag(which, e){
+  e.stopPropagation(); e.preventDefault(); pushHistory();
+  const move=ev=>{ const t=fracAt(ev)*CUTDUR;
+    if(which==='start') CLIP.start=Math.min(Math.max(0,t), CLIP.end-0.3);
+    else CLIP.end=Math.max(Math.min(CUTDUR,t), CLIP.start+0.3);
+    renderTimeline(); renderCues();
+  };
+  const up=()=>{ window.removeEventListener('pointermove',move);
+    window.removeEventListener('pointerup',up); };
+  window.addEventListener('pointermove',move); window.addEventListener('pointerup',up);
+}
+function updHead(){
+  const rem=activeRemoves().reduce((a,r)=>{ const s=Math.max(r.start,CLIP.start),
+    e=Math.min(r.end,CLIP.end); return a+Math.max(0,e-s); },0);
+  const finalLen=Math.max(0,(CLIP.end-CLIP.start)-rem);
+  $('#silHead').innerHTML=`클립 <b>${mmss(CLIP.start)}~${mmss(CLIP.end)}</b> · `+
+    `컷 <b>${SILENCES.length}개</b> → 예상 길이 <b>${finalLen.toFixed(1)}s</b> (배속 전)`;
+  touch();
+}
+
+// 활성 제거구간(내부) / 클립밖 포함 전체 / cut→final 시각 매핑
+const activeRemoves=()=>SILENCES.filter(r=>r.on!==false).slice().sort((a,b)=>a.start-b.start);
+function allRemoves(){ const r=activeRemoves().slice();
+  if(CLIP.start>0.02) r.push({start:0,end:CLIP.start});
+  if(CLIP.end<CUTDUR-0.02) r.push({start:CLIP.end,end:CUTDUR});
+  return r.sort((a,b)=>a.start-b.start); }
+function mapPoint(t, sp){ let removed=0;
+  for(const r of allRemoves()){ if(r.end<=t) removed+=r.end-r.start;
+    else if(r.start<t){ removed+=t-r.start; break; } }
+  return (t-removed)/sp; }
+// 컷을 낀 자막은 살아남아야 함(길이만 줄어듦). 통째로 잘려 말이 안 남을 때만 제외.
+function cueMapped(c){ const s=mapPoint(c.start,1), e=mapPoint(c.end,1); return {s,e,len:e-s}; }
+function cueDropped(c){ return cueMapped(c).len < 0.15; }
+
+// 재생: 잘린 구간(클립 밖 + 내부 컷) 건너뛰기 + 플레이헤드 + 자막
+vedit.addEventListener('timeupdate',()=>{
+  if(!CUTDUR)return;
+  const t=vedit.currentTime;
+  for(const r of allRemoves()){ if(t>=r.start && t<r.end-0.03){
+    vedit.currentTime = r.end<CUTDUR-0.05 ? r.end : CLIP.start; return; } }
+  ph.style.left=(t/CUTDUR*100)+'%';
+  $('#tlTime').textContent=mmss(t)+' / '+mmss(CUTDUR);
+  let act=-1;
+  for(let i=0;i<CUES.length;i++){ const c=CUES[i];
+    if(t>=c.start && t<c.end && !cueDropped(c)){act=i;break;} }
+  $('#capBar').innerHTML = act>=0 ? `<span>${(CUES[act].text||'').replace(/</g,'&lt;')}</span>` : '';
+  document.querySelectorAll('#cueList .cue').forEach((r,i)=>r.classList.toggle('active',i===act));
+});
+vedit.addEventListener('loadedmetadata',()=>{ vedit.playbackRate=speedVal();
+  if(CLIP.start>0.05) vedit.currentTime=CLIP.start;
+  $('#tlTime').textContent='0:00 / '+mmss(CUTDUR); });
+$('#speed').addEventListener('input',()=>{ if(vedit.readyState) vedit.playbackRate=speedVal(); });
+
+// ── 자막 리스트 (수정) ──
+function renderCues(){
+  const list=$('#cueList'); if(!list)return; list.innerHTML='';
+  $('#cueCount').textContent = CUES.length ? `${CUES.length}개` : '—';
+  CUES.forEach((c,i)=>{
+    const dropped=cueDropped(c);
+    const row=document.createElement('div'); row.className='cue'+(dropped?' dropped':'');
+    const play=document.createElement('button'); play.className='play'; play.textContent='▶';
+    play.onclick=()=>{ vedit.currentTime=c.start; vedit.play(); };
+    const cs=document.createElement('input'); cs.className='ct'; cs.type='number'; cs.step='0.1';
+    cs.value=c.start.toFixed(1); cs.onfocus=pushHistory;
+    cs.onchange=()=>{ c.start=parseFloat(cs.value)||0; renderCues(); };
+    const ce=document.createElement('input'); ce.className='ct'; ce.type='number'; ce.step='0.1';
+    ce.value=c.end.toFixed(1); ce.onfocus=pushHistory;
+    ce.onchange=()=>{ c.end=parseFloat(ce.value)||0; renderCues(); };
+    const tx=document.createElement('input'); tx.className='cx'; tx.type='text';
+    tx.value=c.text; tx.onfocus=pushHistory; tx.oninput=()=>{c.text=tx.value; touch();};
+    const del=document.createElement('button'); del.className='del'; del.textContent='×';
+    del.onclick=()=>{ pushHistory(); CUES.splice(i,1); renderCues(); };
+    row.append(play,cs,ce,tx,del); list.appendChild(row);
+  });
+  touch();
+}
+function addCue(){
+  const t=vedit.currentTime||0; pushHistory();
+  CUES.push({start:+t.toFixed(1), end:+(t+1.5).toFixed(1), text:''});
+  CUES.sort((a,b)=>a.start-b.start); renderCues();
+}
+
+// ── 내보내기 ──
+async function exportVideo(){
+  if(!JOB){toast('①을 먼저 하세요');return;}
+  const b=$('#exportVideoBtn'); busy(b,true,'렌더 중…');
+  try{
+    const j=await post('/api/render',{job:JOB,speed:speedVal(),
+      pitch:parseFloat($('#pitch').value),removes:allRemoves()});
+    $('#range3').textContent=`렌더 완료 · ${j.final_dur.toFixed(1)}초`;
+    setVideo('v3',j.media); $('#dlFinal').href='/download/'+JOB+'/final.mp4';
+    $('#r3').style.display='block';
+    $('#r3').scrollIntoView({behavior:'smooth',block:'nearest'});
+  }catch(e){toast(e.message);} finally{busy(b,false);}
+}
+function srtT(t){ t=Math.max(0,t);
+  const h=Math.floor(t/3600), m=Math.floor(t%3600/60), s=Math.floor(t%60),
+    ms=Math.round((t-Math.floor(t))*1000);
+  const p=(n,l=2)=>String(n).padStart(l,'0');
+  return `${p(h)}:${p(m)}:${p(s)},${p(ms,3)}`; }
+function exportSRT(){
+  if(!CUES.length){toast('자막이 없어요');return;}
+  const sp=speedVal(), out=[];
+  for(const c of CUES){
+    const s=mapPoint(c.start,sp), e=mapPoint(c.end,sp);
+    if(e-s<0.15/sp) continue;                          // 통째로 잘린 자막만 제외
+    out.push({s,e,text:c.text});
+  }
+  out.sort((a,b)=>a.s-b.s);
+  const srt=out.map((c,i)=>`${i+1}\n${srtT(c.s)} --> ${srtT(c.e)}\n${c.text}`).join('\n\n')+'\n';
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([srt],{type:'text/plain;charset=utf-8'}));
+  a.download='subtitle.srt'; a.click(); URL.revokeObjectURL(a.href);
+}
+
+// ── ⚡ 한 번에 ──
+async function oneshot(){
+  const shorts=$('#shorts').value.trim(), original=$('#original').value.trim();
+  if(!shorts||!original){toast('숏츠와 원본 URL을 모두 입력하세요');return;}
+  const b=$('#oneshotBtn'); busy(b,true,'전체 처리 중…');
+  try{
+    const j=await post('/api/oneshot',{shorts,original,...settings()});
+    JOB=j.job; CUTDUR=j.cut_dur; HISTORY=[]; $('#undoBtn').disabled=true;
+    SILENCES=(j.removes||[]).map(r=>({...r,on:true}));
+    CLIP={start:j.clip_start||0, end:(j.clip_end||CUTDUR)};
+    CUES=(j.cues||[]).map(c=>({...c}));
+    $('#range1').textContent=`원본 ${j.start} ~ ${j.end}`;
+    setVideo('v1','/media/'+JOB+'/cut.mp4'); $('#r1').style.display='block';
+    setVideo('vedit','/media/'+JOB+'/cut.mp4'); vedit.playbackRate=speedVal();
+    $('#wave').src='/media/'+JOB+'/wave.png?v='+Date.now();
+    renderAll(); enable('#s2');
+    $('#p1').textContent='완료'; $('#p1').className='pill done';
+    // 최종 렌더 결과도 바로 표시
+    $('#range3').textContent=`렌더 완료 · ${j.final_dur.toFixed(1)}초`;
+    setVideo('v3',j.media); $('#dlFinal').href='/download/'+JOB+'/final.mp4';
+    $('#r3').style.display='block';
+    toast(`완성! 공백 ${j.removed}곳(${j.removed_sec}s) 제거 · 이제 컷·자막 다듬어도 돼요`);
+  }catch(e){toast(e.message);} finally{busy(b,false);}
+}
+</script>
+</body>
+</html>
